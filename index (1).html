@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘 저녁 뭐 먹지?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #f5ecd6;
+    --paper-deep: #ecdfbd;
+    --paper-edge: #d8c69a;
+    --ink: #2b2018;
+    --ink-dim: #8a785c;
+    --sk-red: #bb3b2c;
+    --sk-yellow: #d3a418;
+    --sk-blue: #29639e;
+    --sk-green: #437d52;
+    --sk-purple: #6a4c8c;
+    --gold: #c79a3d;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 800px 500px at 50% -10%, rgba(199,154,61,0.14), transparent 60%),
+      var(--paper);
+    background-image:
+      radial-gradient(circle, rgba(43,32,24,0.05) 1px, transparent 1.4px),
+      radial-gradient(ellipse 800px 500px at 50% -10%, rgba(199,154,61,0.14), transparent 60%);
+    background-size: 7px 7px, auto;
+    font-family:'Pretendard', -apple-system, sans-serif;
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:48px 20px 70px;
+  }
+
+  /* --- 색동 무늬 시그니처 바 --- */
+  .saekdong{
+    width:min(480px, 90vw);
+    height:9px;
+    border-radius:5px;
+    overflow:hidden;
+    display:flex;
+    box-shadow:0 2px 6px rgba(43,32,24,0.15);
+  }
+  .saekdong span{ flex:1; }
+  .saekdong span:nth-child(1){ background:var(--sk-red); }
+  .saekdong span:nth-child(2){ background:var(--sk-yellow); }
+  .saekdong span:nth-child(3){ background:var(--sk-blue); }
+  .saekdong span:nth-child(4){ background:var(--sk-green); }
+  .saekdong span:nth-child(5){ background:var(--sk-purple); }
+  .saekdong span:nth-child(6){ background:var(--sk-red); }
+  .saekdong.flip{ flex-direction:row-reverse; }
+
+  header{
+    text-align:center;
+    margin-top:22px;
+    margin-bottom:34px;
+  }
+  .eyebrow{
+    font-size:12.5px;
+    letter-spacing:0.38em;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:10px;
+    font-weight:600;
+  }
+  h1{
+    font-family:'Gowun Batang', serif;
+    font-weight:700;
+    font-size:clamp(32px, 6vw, 50px);
+    margin:0;
+    letter-spacing:-0.01em;
+    color:var(--ink);
+  }
+  header p{
+    color:var(--ink-dim);
+    font-size:14.5px;
+    margin-top:12px;
+  }
+
+  /* --- 카테고리 필터 (도장 라벨 느낌) --- */
+  .filters{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:34px;
+    max-width:520px;
+  }
+  .chip{
+    border:1.5px solid var(--paper-edge);
+    background:var(--paper-deep);
+    color:var(--ink-dim);
+    padding:8px 16px;
+    border-radius:8px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s;
+    font-family:'Pretendard', sans-serif;
+  }
+  .chip:hover{ border-color:var(--sk-red); color:var(--ink); }
+  .chip.active{
+    background:var(--sk-red);
+    color:var(--paper);
+    border-color:var(--sk-red);
+  }
+
+  /* --- 소반(전통 쟁반) 스테이지 --- */
+  .plate-stage{
+    position:relative;
+    width:min(340px, 84vw);
+    height:min(340px, 84vw);
+    margin-bottom:30px;
+  }
+  .tray{
+    width:100%; height:100%;
+    border-radius:50%;
+    background: radial-gradient(circle at 50% 38%, #7c5533, #5c3c22 68%, #472e19 100%);
+    padding:16px;
+    box-shadow: 0 20px 46px rgba(43,32,24,0.28), inset 0 2px 4px rgba(255,255,255,0.08);
+  }
+  .plate{
+    width:100%; height:100%;
+    border-radius:50%;
+    background: var(--paper-deep);
+    border:3px double var(--gold);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:18px;
+    position:relative;
+  }
+  .plate::before{
+    content:'';
+    position:absolute; inset:12px;
+    border-radius:50%;
+    border:1px solid rgba(43,32,24,0.15);
+  }
+  .plate-empty{
+    color:var(--ink-dim);
+    font-size:14px;
+    line-height:1.7;
+    max-width:210px;
+  }
+  .plate-result{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:9px;
+    animation: rise .5s ease;
+  }
+  .plate-result.show{ display:flex; }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(14px) scale(.96); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .dish-tag{
+    display:inline-block;
+    font-size:11.5px;
+    letter-spacing:0.05em;
+    color:var(--paper);
+    background:var(--sk-red);
+    padding:3px 12px;
+    border-radius:5px;
+    font-weight:700;
+    transform:rotate(-4deg);
+    box-shadow:0 2px 5px rgba(187,59,44,0.35);
+  }
+  .dish-name{
+    font-family:'Gowun Batang', serif;
+    font-size:29px;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .dish-note{
+    color:var(--ink-dim);
+    font-size:13px;
+    max-width:220px;
+    line-height:1.6;
+  }
+  .dish-spice{
+    color:var(--sk-red);
+    font-size:12.5px;
+    font-weight:700;
+  }
+
+  /* --- 도장(印) 버튼 --- */
+  button#decide{
+    background:var(--sk-red);
+    color:var(--paper);
+    border:2px solid var(--gold);
+    padding:15px 32px;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:700;
+    font-family:'Gowun Batang', serif;
+    cursor:pointer;
+    box-shadow:0 10px 26px rgba(187,59,44,0.28), inset 0 0 0 3px rgba(245,236,214,0.12);
+    transition:transform .12s ease, box-shadow .12s ease;
+    letter-spacing:0.02em;
+  }
+  button#decide:hover{ transform:translateY(-2px); box-shadow:0 14px 30px rgba(187,59,44,0.35), inset 0 0 0 3px rgba(245,236,214,0.12); }
+  button#decide:active{ transform:translateY(1px) scale(.98); }
+
+  footer{
+    margin-top:40px;
+    color:var(--ink-dim);
+    font-size:12px;
+    letter-spacing:0.05em;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .plate-result{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="saekdong"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+  <header>
+    <div class="eyebrow">오늘의 밥상</div>
+    <h1>오늘 저녁 뭐 먹지?</h1>
+    <p>고민은 그만, 오늘의 저녁을 점지받아 보세요</p>
+  </header>
+
+  <div class="filters" id="filters">
+    <button class="chip active" data-cat="all">전체</button>
+    <button class="chip" data-cat="한식">한식</button>
+    <button class="chip" data-cat="중식">중식</button>
+    <button class="chip" data-cat="일식">일식</button>
+    <button class="chip" data-cat="양식">양식</button>
+    <button class="chip" data-cat="분식">분식</button>
+  </div>
+
+  <div class="plate-stage">
+    <div class="tray">
+      <div class="plate">
+        <div class="plate-empty" id="emptyState">아직 빈 소반이에요.<br>도장을 찍어 오늘의 저녁을 올려보세요.</div>
+        <div class="plate-result" id="result">
+          <div class="dish-tag" id="dishCat">한식</div>
+          <div class="dish-name" id="dishName">김치찌개</div>
+          <div class="dish-note" id="dishNote">얼큰하고 든든한, 오늘 같은 날 딱 좋은 한 그릇</div>
+          <div class="dish-spice" id="dishSpice"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button id="decide">오늘의 저녁, 점지받기</button>
+
+  <div class="saekdong flip"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+  <footer>매일 저녁, 새로운 한 상</footer>
+
+<script>
+  const MENU = [
+    { name:"김치찌개", cat:"한식", note:"얼큰하고 든든한, 언제 먹어도 실패 없는 그 맛", spice:"🌶️ 매콤" },
+    { name:"된장찌개", cat:"한식", note:"구수하게 속을 채워주는 집밥의 정석", spice:"" },
+    { name:"제육볶음", cat:"한식", note:"밥 두 그릇은 순삭, 매콤달콤 볶음의 정석", spice:"🌶️ 매콤" },
+    { name:"삼겹살", cat:"한식", note:"오늘 하루 고생한 나에게 주는 선물", spice:"" },
+    { name:"닭갈비", cat:"한식", note:"치즈 추가는 선택이 아니라 필수", spice:"🌶️ 매콤" },
+    { name:"짜장면", cat:"중식", note:"고민될 땐 역시 검은 소스의 클래식", spice:"" },
+    { name:"짬뽕", cat:"중식", note:"칼칼한 국물 한 입이면 스트레스가 사라진다", spice:"🌶️ 매콤" },
+    { name:"마라탕", cat:"중식", note:"혀가 얼얼해도 멈출 수 없는 중독의 맛", spice:"🌶️🌶️ 아주 매콤" },
+    { name:"탕수육", cat:"중식", note:"부먹이든 찍먹이든, 결국은 다 맛있다", spice:"" },
+    { name:"초밥", cat:"일식", note:"입안에서 사르르, 오늘은 좀 특별한 저녁", spice:"" },
+    { name:"돈카츠", cat:"일식", note:"바삭한 튀김옷 속 육즙 가득한 위로", spice:"" },
+    { name:"라멘", cat:"일식", note:"진한 육수 한 그릇이면 하루의 피로가 풀린다", spice:"" },
+    { name:"우동", cat:"일식", note:"쫄깃한 면발과 따뜻한 국물, 심플하지만 확실한 만족", spice:"" },
+    { name:"파스타", cat:"양식", note:"오늘 저녁은 나에게 조금 근사하게", spice:"" },
+    { name:"스테이크", cat:"양식", note:"특별한 이유 없어도 괜찮은, 나를 위한 한 끼", spice:"" },
+    { name:"피자", cat:"양식", note:"치즈 늘어나는 순간이 제일 행복하다", spice:"" },
+    { name:"떡볶이", cat:"분식", note:"매콤달콤, 언제 먹어도 옳은 국민 간식", spice:"🌶️ 매콤" },
+    { name:"김밥", cat:"분식", note:"간단하지만 든든하게, 빠르고 확실한 한 끼", spice:"" },
+    { name:"라볶이", cat:"분식", note:"떡볶이와 라면의 완벽한 조합", spice:"🌶️ 매콤" }
+  ];
+
+  let activeCat = "all";
+  const filters = document.getElementById('filters');
+  const emptyState = document.getElementById('emptyState');
+  const result = document.getElementById('result');
+  const dishName = document.getElementById('dishName');
+  const dishCat = document.getElementById('dishCat');
+  const dishNote = document.getElementById('dishNote');
+  const dishSpice = document.getElementById('dishSpice');
+
+  filters.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    if(!btn) return;
+    filters.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+  });
+
+  document.getElementById('decide').addEventListener('click', () => {
+    const pool = activeCat === "all" ? MENU : MENU.filter(m => m.cat === activeCat);
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+
+    result.classList.remove('show');
+    void result.offsetWidth;
+
+    emptyState.style.display = 'none';
+    dishName.textContent = pick.name;
+    dishCat.textContent = pick.cat;
+    dishNote.textContent = pick.note;
+    dishSpice.textContent = pick.spice;
+    result.classList.add('show');
+  });
+</script>
+
+</body>
+</html>
